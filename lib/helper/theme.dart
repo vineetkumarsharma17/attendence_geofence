@@ -5,15 +5,17 @@ class ThemeClass {
       scaffoldBackgroundColor: Colors.white,
       colorScheme: ColorScheme.light(),
       primarySwatch: AppColors.primary,
-      fontFamily: 'Inter',
       appBarTheme: AppBarTheme(
           centerTitle: true,
           iconTheme: IconThemeData(
             color: AppColors.primary, //change your color here
           ),
           titleTextStyle: const TextStyle(
-              fontWeight: FontWeight.bold, fontSize: 20, fontFamily: 'Inter'),
-          backgroundColor: Colors.transparent,
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 20,
+              fontFamily: 'Inter'),
+          backgroundColor: AppColors.primary,
           elevation: 0),
       inputDecorationTheme: InputDecorationTheme(
         disabledBorder: OutlineInputBorder(
