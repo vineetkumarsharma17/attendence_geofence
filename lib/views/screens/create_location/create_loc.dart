@@ -34,7 +34,7 @@ class _SetLocationScreenState extends State<SetLocationScreen> {
 
   double selectedArea = 10; // in meter
   LatLng? markedLatLong;
-  TextEditingController radiusCtrl = TextEditingController(text: "10");
+  TextEditingController radiusCtrl = TextEditingController();
 
   @override
   Widget build(BuildContext context) {

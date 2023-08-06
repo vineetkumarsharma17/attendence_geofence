@@ -77,7 +77,7 @@ class _CheckLocationScreenState extends State<CheckLocationScreen> {
                                 : AppColors.primary,
                             onTap: () {
                               if (isInLocation.value) {
-                                Get.to(() => const SelfieScreen());
+                                Get.offAll(() => const SelfieScreen());
                               }
                             })),
                       ),

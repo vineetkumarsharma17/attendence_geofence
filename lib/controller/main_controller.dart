@@ -1,5 +1,10 @@
+import 'dart:io';
 import 'dart:math';
 
+import 'package:attendence_geofence/helper/permission.dart';
+import 'package:attendence_geofence/models/use_model.dart';
+import 'package:attendence_geofence/services/firebaseStorage.dart';
+import 'package:attendence_geofence/services/firestore.dart';
 import 'package:attendence_geofence/views/screens/auth_screens/log_in_screen.dart';
 import 'package:attendence_geofence/views/screens/auth_screens/register_profile.dart';
 import 'package:attendence_geofence/views/screens/create_location/create_loc.dart';
@@ -8,6 +13,7 @@ import 'package:get/get.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import '../views/widgets/loading.dart';
 
@@ -17,17 +23,24 @@ class MainController extends GetxController {
   Rx<LatLng?> selectedLocation = Rx<LatLng?>(null);
   RxDouble radius = 10.0.obs;
   // RxMap dbUser
-
+  UserDb? userDb;
   @override
   void onInit() {
     // TODO: implement onInit
     super.onInit();
+    checkPermission(Permission.storage);
     Future.delayed(const Duration(seconds: 2), () {
-      auth.userChanges().listen((user) {
+      auth.userChanges().listen((user) async {
         if (user == null) {
           Get.offAll(() => LogInScreen());
         } else {
-          Get.offAll(() => const RegisterProfileScreen());
+          userDb = await FireStoreService().getUser();
+          if (userDb == null || userDb!.profilePic == null) {
+            Get.offAll(() => const RegisterProfileScreen());
+          } else {
+            print("Useerget:" + userDb!.toJson().toString());
+            Get.offAll(() => const SetLocationScreen());
+          }
         }
       });
     });
@@ -83,5 +96,30 @@ class MainController extends GetxController {
       print("Catch Error: $error");
       showSnackBar("Error", error.toString());
     }
+  }
+
+  void registerUser(File file) async {
+    UserDb user = UserDb(
+        name: auth.currentUser!.displayName ?? "",
+        email: auth.currentUser!.email!);
+    String fileExt = file.path.split(".").last;
+    showLoading("Uploading file...");
+    final url = await FirebaseStorageService.uploadFile(
+        "profilePic", auth.currentUser!.uid + ".$fileExt",
+        file: file);
+    if (url != null) {
+      print("url:$url");
+      user.profilePic = url;
+      userDb = await FireStoreService().createUser(user);
+      if (userDb != null) {
+        // Get.offAll(() => const SetLocationScreen());
+      }
+    }
+    dismissLoadingWidget();
+  }
+
+  setLocation(Map data) {
+    final res = FireStoreService().setLocation(data);
+    if (res != null) {}
   }
 }

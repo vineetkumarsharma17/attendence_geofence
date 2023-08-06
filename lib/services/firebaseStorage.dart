@@ -71,8 +71,8 @@ class FirebaseStorageService {
       String name = getFileNameFromUrl(url);
       Directory appDocDir = await getTemporaryDirectory();
       String appDocPath = appDocDir.path;
-      String filePath = '$appDocPath/img.jpg';
-      log(filePath);
+      String filePath = '$appDocPath/$name';
+      log("name:" + filePath);
       final File file = File(filePath);
       await FirebaseStorage.instance.refFromURL(url).writeToFile(file);
       return file;

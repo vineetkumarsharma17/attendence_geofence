@@ -61,7 +61,7 @@ class _ShowMapWidgetState extends State<ShowMapWidget> {
     // Get the current location
 
     _locationService.onLocationChanged.listen((LocationData result) {
-      log(result.toString());
+      // log(result.toString());
       _currentLocation.value = result;
       try {
         if (isCenterAlign) {
@@ -180,7 +180,10 @@ class _ShowMapWidgetState extends State<ShowMapWidget> {
               },
               child: CircleAvatar(
                 backgroundColor: AppColors.grey,
-                child: Icon(Icons.refresh),
+                child: Icon(
+                  Icons.refresh,
+                  color: Colors.white,
+                ),
               ),
             ))
       ],

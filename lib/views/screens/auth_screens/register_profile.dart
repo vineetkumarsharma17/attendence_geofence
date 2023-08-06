@@ -1,9 +1,17 @@
 import 'dart:io';
 
+import 'package:attendence_geofence/controller/main_controller.dart';
+import 'package:attendence_geofence/helper/permission.dart';
+import 'package:attendence_geofence/services/image_picker.dart';
+import 'package:attendence_geofence/views/widgets/button.dart';
+import 'package:attendence_geofence/views/widgets/toast.dart';
 import 'package:camera/camera.dart';
 import 'package:circular_profile_avatar/circular_profile_avatar.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:permission_handler/permission_handler.dart';
+
+import '../../../helper/theme.dart';
 
 class RegisterProfileScreen extends StatefulWidget {
   const RegisterProfileScreen({super.key});
@@ -16,87 +24,96 @@ class _RegisterProfileScreenState extends State<RegisterProfileScreen> {
   Rx<File?> selfieImg = Rx<File?>(null);
   late CameraController _cameraController;
   RxBool _isCameraInitialized = false.obs;
-
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-    _initializeCamera();
-  }
-
-  @override
-  void dispose() {
-    _cameraController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _takePicture() async {
-    if (!_cameraController.value.isInitialized) {
-      return;
-    }
-
-    final picture = await _cameraController.takePicture();
-    if (picture != null) selfieImg(File(picture.path));
-    // Implement your logic to save, display, or process the picture here.
-  }
-
-  Future<void> _initializeCamera() async {
-    final cameras = await availableCameras();
-    if (cameras.isEmpty) {
-      return;
-    }
-
-    _cameraController = CameraController(cameras[0], ResolutionPreset.high);
-    await _cameraController.initialize();
-
-    if (mounted) {
-      _isCameraInitialized(true);
-    }
-  }
+  MainController c = Get.find();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Profile")),
-      body: ListView(
-        padding: EdgeInsets.symmetric(horizontal: 20),
-        children: [
-          SizedBox(
-            height: 50,
-          ),
-          GestureDetector(
-            // onTap: _pickImageFromCamera,
-            child: Obx(
-              () => _isCameraInitialized.value
-                  ? CircularProgressIndicator()
-                  : Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        Positioned.fill(
-                          child: CameraPreview(_cameraController),
+        appBar: AppBar(title: const Text("Profile")),
+        body: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              Obx(() => Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      // Circular container with profile picture
+                      Container(
+                        width: 150,
+                        height: 150,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: AppColors.lightGrey),
+                          image: selfieImg.value != null
+                              ? DecorationImage(
+                                  image: FileImage(selfieImg.value!),
+                                  fit: BoxFit.cover,
+                                )
+                              : null,
                         ),
-                        GestureDetector(
-                          onTap: _takePicture,
-                          child: CircularProfileAvatar(
-                            selfieImg.value!
-                                .path, // You can provide the image here to preview captured image.
-                            radius: 150,
-                            backgroundColor: Colors.transparent,
-                            child: _cameraController.value.isInitialized
-                                ? AspectRatio(
-                                    aspectRatio:
-                                        _cameraController.value.aspectRatio,
-                                    child: CameraPreview(_cameraController),
-                                  )
-                                : Container(),
+                        child: selfieImg.value == null
+                            ? const Icon(
+                                Icons.person,
+                                size: 100,
+                                color: Colors.grey,
+                              )
+                            : null,
+                      ),
+                      // Camera icon button
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: IconButton(
+                          onPressed: () async {
+                            selfieImg(await pickImageAndCrop());
+                          },
+                          icon: const CircleAvatar(
+                            child: Icon(
+                              Icons.camera_alt,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
-                      ],
-                    ),
-            ),
-          )
-        ],
-      ),
-    );
+                      ),
+                    ],
+                  )),
+              SizedBox(
+                height: 20,
+              ),
+              ButtonWidget(
+                  text: "Upload",
+                  onTap: () {
+                    if (selfieImg.value == null) {
+                      showErrorSnackBar("Please Click Image");
+                      return;
+                    }
+                    c.registerUser(selfieImg.value!);
+                  })
+            ],
+          ),
+        )
+        // Obx(
+        //   () => !_isCameraInitialized.value
+        //       ? Center(child: CircularProgressIndicator())
+        //       : selfieImg.value == null
+        //           ? GestureDetector(
+        //               onTap: _takePicture,
+        //               child: CircularProfileAvatar(
+        //                 "", // You can provide the image here to preview captured image.
+        //                 radius: 150,
+        //                 backgroundColor: Colors.black,
+        //                 child: _cameraController.value.isInitialized
+        //                     ? CameraPreview(_cameraController)
+        //                     : Container(),
+        //               ),
+        //             )
+        //           : CircleAvatar(
+        //               backgroundImage: FileImage(selfieImg.value!, scale: 1),
+        //               radius: 150),
+        // ),
+        //   ],
+        // ),
+        );
   }
 }
